@@ -37,15 +37,27 @@ def roc_auc(y, s):
     return (r[y == 1].sum() - n1 * (n1 + 1) / 2) / (n1 * n0)
 
 
+def threshold_curve(y, s):
+    """Cumulative TP/FP at each DISTINCT score threshold (descending), so tied scores are
+    always flagged together and results never depend on row order."""
+    order = np.argsort(-s, kind="mergesort")
+    ys, ss = y[order], s[order]
+    tp = np.cumsum(ys)
+    fp = np.cumsum(1 - ys)
+    last = np.r_[np.where(np.diff(ss) != 0)[0], len(ss) - 1]  # last index of each tie block
+    return ss[last], tp[last], fp[last]
+
+
 def avg_precision(y, s):
+    """Average precision = sum over distinct thresholds of (R_n - R_{n-1}) * P_n
+    (the same definition as sklearn.metrics.average_precision_score); tie-aware."""
     n1 = y.sum()
     if n1 == 0:
         return np.nan
-    order = np.argsort(-s, kind="mergesort")
-    ys = y[order]
-    tp = np.cumsum(ys)
-    prec = tp / np.arange(1, len(ys) + 1)
-    return (prec * ys).sum() / n1
+    _, tp, fp = threshold_curve(y, s)
+    prec = tp / (tp + fp)
+    rec = tp / n1
+    return float(np.sum(np.diff(np.r_[0.0, rec]) * prec))
 
 
 def brier(y, s):
@@ -171,19 +183,24 @@ def classification(df, a, rng):
 
     # thresholds
     print("\n## Operating points")
-    order = np.argsort(-s, kind="mergesort")
-    ys = y[order]
-    tp_cum = np.cumsum(ys)
+    thr_d, tp_d, fp_d = threshold_curve(y, s)
+    flagged_d = tp_d + fp_d
     P = y.sum()
     rows = []
     ks = sorted({max(1, int(round(q * len(y)))) for q in [0.01, 0.02, 0.05, 0.10, 0.20, 0.30, 0.50]})
     if a.capacity:
         ks = sorted(set(ks) | {min(a.capacity, len(y))})
+    tie_note = False
     for k in ks:
-        tp = tp_cum[k - 1]
-        fp = k - tp
+        # use the largest distinct threshold that flags at most k cases (ties are never split)
+        i = np.searchsorted(flagged_d, k, side="right") - 1
+        if i < 0:
+            i = 0  # the top tie block alone exceeds k: report it, flagged count shows the overshoot
+        tp, fp, n_flag = tp_d[i], fp_d[i], flagged_d[i]
+        tie_note |= n_flag != k
         fn_ = P - tp
-        row = dict(k=k, thr=s[order][k - 1], prec=tp / k, rec=tp / P if P else np.nan, lift=(tp / k) / prev,
+        row = dict(k=k, n_flag=int(n_flag), thr=thr_d[i], prec=tp / n_flag, rec=tp / P if P else np.nan,
+                   lift=(tp / n_flag) / prev,
                    cost=(fp * a.cost_fp + fn_ * a.cost_fn) if a.cost_fp is not None and a.cost_fn is not None else None,
                    cap=(a.capacity == k))
         rows.append(row)
@@ -193,19 +210,22 @@ def classification(df, a, rng):
     print("|---" * (hdr.count("|") - 1) + "|")
     for r in rows:
         tag = " **(capacity)**" if r["cap"] else ""
-        line = (f"| {r['k']:,} ({r['k'] / len(y):.1%}){tag} | {r['thr']:.4f} | {r['prec']:.3f} | "
+        shown = f"{r['k']:,}" if r["n_flag"] == r["k"] else f"{r['k']:,} → {r['n_flag']:,} (ties)"
+        line = (f"| {shown} ({r['n_flag'] / len(y):.1%}){tag} | {r['thr']:.4f} | {r['prec']:.3f} | "
                 f"{r['rec']:.3f} | {r['lift']:.2f}x |")
         if has_cost:
             line += f" {r['cost']:,.0f} |"
         print(line)
+    if tie_note:
+        print("\nNote: tied scores are never split, so some rows flag a different count than requested.")
     if has_cost:
-        fp_cum = np.arange(1, len(ys) + 1) - tp_cum
-        costs = fp_cum * a.cost_fp + (P - tp_cum) * a.cost_fn
-        costs = np.concatenate([[P * a.cost_fn], costs])  # k=0: flag nobody
-        k_best = int(np.argmin(costs))
+        costs = fp_d * a.cost_fp + (P - tp_d) * a.cost_fn
+        costs = np.concatenate([[P * a.cost_fn], costs])  # index 0: flag nobody
+        j = int(np.argmin(costs))
+        k_best = 0 if j == 0 else int(flagged_d[j - 1])
         base_cost = min(P * a.cost_fn, (len(y) - P) * a.cost_fp)
-        thr_best = s[order][k_best - 1] if k_best > 0 else np.inf
-        print(f"\nCost-optimal: flag top {k_best:,} (score ≥ {f(thr_best)}), expected cost {costs[k_best]:,.0f} "
+        thr_best = thr_d[j - 1] if j > 0 else np.inf
+        print(f"\nCost-optimal: flag top {k_best:,} (score ≥ {f(thr_best)}), expected cost {costs[j]:,.0f} "
               f"vs {base_cost:,.0f} for the best trivial policy (flag all / none). "
               f"If calibrated, theoretical threshold = {a.cost_fp / (a.cost_fp + a.cost_fn):.4f}.")
 

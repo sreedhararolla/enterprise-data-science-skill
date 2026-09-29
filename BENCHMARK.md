@@ -1,51 +1,55 @@
 # Benchmark report
 
-**The question:** does this skill make an AI agent a better enterprise data scientist
-than the same agent with no skill, or with the best existing data-science skill?
+**The question:** does the enterprise data-science skill make an AI agent a better
+enterprise data scientist than (a) the same agent with no skill, or (b) a public
+data-science skill?
 
-The benchmark agent was Claude (Claude Code sub-agents). The skill itself is
-model-agnostic and uses the open Agent Skills format. Results on other models and agents
-haven't been measured yet, and contributions are welcome.
+**Read this first:**
+- **Which version was tested:** the results below are for **earlier snapshots** of the
+  core skill (v3 in round 2, v2 in round 1), before it was split into three skills. The
+  current versions include fixes from these results but haven't been re-benchmarked.
+- **The agent and the graders:** Claude, as Claude Code sub-agents, did the tasks. The
+  graders were separate Claude-family grading agents, not humans and not a different
+  model family.
+- **The comparator:** one public skill chosen by the author,
+  [borghei/Claude-Skills `data-scientist`](https://github.com/borghei/Claude-Skills/blob/main/data-analytics/data-scientist/SKILL.md).
+  For the EDA task it was paired with a planning/EDA skill. It is not a survey of all
+  available skills.
 
-## Setup
+## Tasks
 
-- **Three setups:**
-  - this skill;
-  - [borghei/Claude-Skills `data-scientist`](https://github.com/borghei/Claude-Skills/blob/main/data-analytics/data-scientist/SKILL.md),
-    the most complete public data-science SKILL.md found (for the EDA task it was paired
-    with a planning/EDA skill);
-  - no skill.
-- **Seven realistic tasks** (prompts and assertions are in `enterprise-data-science/evals/evals.json`):
+The prompts and assertions are in [`benchmark/evals.json`](benchmark/evals.json), the
+fixtures in [`benchmark/fixtures/`](benchmark/fixtures), and the answer keys in
+[`benchmark/SPOILERS.md`](benchmark/SPOILERS.md).
 
 | # | Task | What it probes |
 |---|---|---|
-| 1 | "0.97 AUC churn model, VP wants rollout, write it up" | leakage detection, pushing back on a flawed request |
+| 1 | "0.97 AUC churn model, VP wants rollout, write it up" | Leakage detection; pushing back on a flawed request |
 | 2 | Checkout A/B test with a 48.6/51.4 split | SRM, significance, power |
-| 3 | Loyalty program in 2 states, "how much did it cause?" | DiD/synthetic control, inference with 2 treated units |
-| 4 | Fraud repo, "experiment mode, push PR-AUC, p99 < 30 ms" (sandbox) | autonomous loop discipline; a planted leak column |
-| 5 | NRR fell 116% → 108%, "auto-research it" (sandbox, 3 planted drivers) | driver attribution, measurement artifacts, red herrings |
-| 6 | EDA on a CRM extract with 12 planted defects | data quality, PII, target leakage, the 'NA' trap |
-| 7 | "Build me a churn model" (vague) | clarifying-question quality |
+| 3 | Loyalty program in 2 states, "how much did it cause?" | DiD / synthetic control, inference with 2 treated units |
+| 4 | Fraud repo, "experiment mode, push PR-AUC, p99 < 30 ms" (sandbox) | Autonomous loop discipline, a planted leak column |
+| 5 | NRR fell 116% → 108%, "auto-research it" (sandbox, 3 planted drivers) | Driver attribution, measurement artifacts, red herrings |
+| 6 | EDA on a CRM extract with 12 planted defects | Data quality, PII, target leakage, the `NA` trap |
+| 7 | "Build me a churn model" (vague) | Clarifying-question quality |
 
-- **Blind grading:** each task's outputs were anonymized and graded by an independent
-  grader. The grader scored pass/fail assertions, re-ran scripts, spot-checked numbers
-  against the data, and gave a 1–10 holistic score.
-- **Objective harness checks** for the fraud task: evaluator hash, whether the leak
-  feature was used, and a re-run of the original evaluator on the final code.
+**Grading.** For each task, the outputs were anonymized as letters and given to one
+grading agent. It:
+- graded every assertion pass/fail, with evidence;
+- re-ran the candidates' scripts;
+- spot-checked quoted numbers against the data;
+- gave each output a 1–10 holistic score and ranked them.
 
-## Round 1: 1 run per setup, 21 outputs
+For task 4, objective harness checks were computed first and given to the grader as
+ground truth: the evaluator hash, whether the leak feature was used, and a re-run of the
+original evaluator on each candidate's final code.
 
-| | This skill | borghei | No skill |
-|---|---|---|---|
-| Ranked 1st | **7/7** | 0 | 0 |
-| Holistic score (mean) | **8.9** | 7.1 | 7.0 |
-| Assertions passed | **59/59** | 56/59 | 56/59 |
+## Main result: round 2 (v3 snapshot)
 
-The assertions barely separated the setups, so round 2 used stricter ones.
+Setup: stricter assertions, **2 runs per configuration** (42 outputs), an isolated
+scratch folder for each run, and a single grader per task that saw all 6 anonymized
+outputs.
 
-## Round 2: stricter assertions, 2 runs per setup, 42 outputs, isolated scratch folders
-
-| | This skill (v3) | borghei | No skill |
+| | Core skill (v3) | Comparator skill | No skill |
 |---|---|---|---|
 | Assertions passed | **129/138 (93.5%)** | 99/138 (72%) | 91/138 (66%) |
 | Holistic score (mean ± sd) | **8.4 ± 0.5** | 6.6 ± 0.8 | 5.9 ± 1.4 |
@@ -55,7 +59,7 @@ The assertions barely separated the setups, so round 2 used stricter ones.
 
 **Mean holistic score by task:**
 
-| Task | This skill | borghei | No skill |
+| Task | Core skill (v3) | Comparator | No skill |
 |---|---|---|---|
 | Leaky churn write-up | **9.0** | 6.5 | 5.5 |
 | SRM checkout test | **8.5** | 7.5 | 8.0 |
@@ -66,57 +70,80 @@ The assertions barely separated the setups, so round 2 used stricter ones.
 | Vague churn request | **8.0** | 5.5 | 4.5 |
 
 Per-run data is in [`benchmark/round2_results.json`](benchmark/round2_results.json).
+With only 2 runs per cell and a single grader per task, treat task-level differences of
+about 1 point as indicative, not conclusive. The SRM task in particular is close.
+
+## Supporting result: round 1 (v2 snapshot)
+
+1 run per configuration, 21 outputs. The core skill ranked first on all 7 tasks, with a
+mean holistic score of 8.9 against 7.1 for the comparator and 7.0 for no skill. The
+assertion pass rates were 59/59, 56/59 and 56/59, but those assertions barely separated
+the setups.
+
+**Caveat:** during round 1 the answer keys sat in a scratch folder the agents could reach,
+and access couldn't be audited. Circumstantial evidence suggests no agent read them.
+Round 2 isolated each run for this reason.
 
 ## What the skill changes
 
-The base agent already catches the famous pitfalls: the 0.97 AUC, SRM, the leak column.
-Model quality on the fraud task tied across all setups (true PR-AUC 0.46–0.48).
-The skill wins on **process and trust**:
-- a charter and locked evaluation before iterating;
-- noise-aware keep decisions and fresh-seed confirmation;
-- a single holdout scoring with calibration and slice checks;
-- clarifying questions with defaults;
-- reconciliation to trusted numbers;
-- driver-level attribution that reconciles to the total;
-- concise, self-contained deliverables.
+The base agent already catches the famous pitfalls: the 0.97 AUC, SRM, and the fraud
+leak column. On the fraud task, model quality tied across all setups (true PR-AUC
+0.46–0.48). The skill made the difference on process and trust:
+- **Before iterating:** a charter, and a locked evaluation.
+- **During iteration:** noise-aware keep decisions, and fresh-seed confirmation.
+- **On the holdout:** a single scoring, with calibration and slice checks.
+- **Clarifying questions:** asked with defaults.
+- **Numbers:** reconciled to trusted sources, with driver-level attribution that
+  reconciles to the total.
+- **Deliverables:** concise and self-contained.
 
-## Validation of bundled tools
+## Changes since the benchmarked snapshot (not yet re-benchmarked)
 
-- **`profile_data.py`:** caught 12/12 planted defects in the EDA dataset, with no false
-  positives on a clean table. The EDA skill it replaced caught 1/12: it reported
-  North America ('NA') as 51% missing, and its duplicate-ID check crashed.
-- **`leakage_scan.py`:** flagged every planted leak type (post-outcome field, target-encoding
-  missingness, backfilled late-period feature, ID column).
+- **Clarifying questions:** at most 5 questions and 8 individual asks, with a default for
+  every ask.
+- **Too-regular patterns** (for example, every account changing by exactly ×0.75) are
+  flagged for data verification.
+- **Per-unit effects** use fixed pre-launch denominators.
+- **DiD seasonality:** the trade-offs between approaches are spelled out.
+- **Latency fixes:** no private APIs.
+- **Simulators:** any simulator behind a quoted number is shipped with it.
+- **Split into three skills:** core, experiment mode and auto-research, each with a
+  narrower trigger.
+- **Git safety:** isolated worktrees, `git revert` only, never `reset --hard`; a charter
+  never overrides host rules.
+- **Script fixes:** pandas 3 compatibility in `profile_data.py`, tie-aware PR-AUC and
+  operating points, lab-book lock paths, and rule-score baselines in `eval_report.py`.
+- **Tests:** a test suite and CI covering Python 3.9–3.13 with pandas 2.x and 3.x.
+
+## Validation of the bundled tools
+
+These results are deterministic and covered by the test suite:
+- **`profile_data.py`:** detects all 12 planted defects in the EDA fixture, with identical
+  output on pandas 2.2 and 3.0. The EDA skill it replaced caught 1 of 12, reported North
+  America (`NA`) as 51% missing, and crashed on the duplicate-ID check.
+- **`leakage_scan.py`:** flags every planted leak type (a post-outcome field, missingness
+  that encodes the target, a feature backfilled only in later periods, an ID column).
+- **`eval_report.py`:** PR-AUC matches `sklearn.metrics.average_precision_score` to
+  machine precision on tie-heavy data.
 - **`experiment.py`:** matches textbook sample sizes (3,841 per arm for 10% → 12%).
-- **`labbook.py`:** keep/discard, guardrail, plateau, budget, tamper-detection and
-  single-use holdout behavior were all exercised end to end.
-
-## Improvements made from benchmark findings
-
-- **After round 1 (v3):**
-  - a deliverable-hygiene section: short replies, self-contained deliverables,
-    consistent numbers, and headlines that obey the causal language ladder;
-  - driver-based attribution in research mode;
-  - the prediction horizon asked explicitly.
-- **After round 2 (v5):**
-  - a cap on clarifying questions (≤5 questions, ≤8 individual asks, a default on each);
-  - ship any simulator behind quoted numbers;
-  - flag too-regular patterns for data verification;
-  - fixed pre-launch denominators for per-unit effects;
-  - seasonality trade-offs in DiD;
-  - no private-API latency hacks;
-  - two script bug fixes.
-- **v5 has not been re-benchmarked yet.**
+- **`labbook.py`:** the keep/discard, guardrail, tamper-detection and one-time-holdout
+  behavior are all exercised end to end.
 
 ## Limitations
 
-- **Synthetic tasks, and a single competitor.** "Best" means best among the setups tested.
-- **Grading:** one grader per task, and Claude-family models grading Claude-family outputs.
-  Assertions were written by the skill author, but graded blind.
-- **Round 1 contamination risk:** answer keys sat in a shared scratch folder during
-  round 1, and access couldn't be audited. Circumstantial evidence suggests no leakage.
-  Round 2 isolated each run.
-- **Process incidents in round 2:** two runs killed all Python processes on the shared
-  machine mid-benchmark. Final fraud metrics were re-verified by re-running the
-  original evaluator.
-- **Timing figures are inflated** by 20 concurrent agents sharing one machine.
+- **Coverage:** synthetic tasks; one comparator; one agent family, both doing the tasks
+  and grading them.
+- **Who wrote the assertions:** the skill's author wrote them, though grading was blind.
+- **Sample size:** a single grader per task, and 1–2 runs per cell.
+- **Process incidents in round 2:** two agents ran blanket process kills on the shared
+  machine mid-benchmark. Final fraud metrics were re-verified by re-running the original
+  evaluator on each candidate's final code. The skills now forbid this behavior.
+- **Timing:** figures are inflated, because about 20 agents ran concurrently on one
+  machine.
+- **Grader variation:** one grader found that the answer key's in-isolation size for the
+  Pro driver (≈2.5pp) is lower than the driver-level attributions most methods produce
+  (3.5–3.6pp), because of interactions. It scored that assertion leniently for every
+  configuration.
+
+**Most wanted contribution:** re-runs on other agents and models, with independent human
+or cross-model graders.

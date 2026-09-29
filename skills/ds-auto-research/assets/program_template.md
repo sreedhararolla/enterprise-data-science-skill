@@ -2,6 +2,10 @@
 
 > Agree on this once with the human. After that, the agent runs without asking for
 > anything this charter covers, and stops to ask for anything it doesn't.
+>
+> **This charter never overrides the host agent's rules.** Approval prompts, permission
+> settings, sandboxing, network limits, and cost controls of the environment always take
+> precedence. If the host asks for approval, ask; if an action is blocked, stop and report.
 
 **Mode:** Experiment / Auto-Research · **Owner:** [human] · **Date:** [yyyy-mm-dd] · **Branch:** `exp/[yyyymmdd]-[slug]`
 
@@ -34,7 +38,8 @@
 - [model size ≤ 200 MB]
 
 ## 6. Allowed without asking
-- Edit the editable surface; commit/revert on the experiment branch
+- Edit the editable surface in an isolated worktree or experiment branch; commit every
+  candidate, and undo with `git revert` (never `reset --hard`, `clean -f`, or force-push)
 - Run the harness, read-only warehouse queries within the scan budget
 - Web search for methods and literature
 

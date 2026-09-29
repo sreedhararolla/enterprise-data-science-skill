@@ -51,6 +51,13 @@ PII_VALUE = {
 NUMERIC_TEXT = re.compile(r"^\s*[-+]?[$€£¥]?\s*[-+]?(\d{1,3}(,\d{3})+|\d+)(\.\d+)?\s*%?\s*$")
 
 
+def is_text(s):
+    """True for text columns in both pandas 2 (object) and pandas 3 (str / string dtypes)."""
+    if pd.api.types.is_bool_dtype(s) or isinstance(s.dtype, pd.CategoricalDtype):
+        return False
+    return s.dtype == object or pd.api.types.is_string_dtype(s)
+
+
 def load(path, sample):
     if path.endswith((".parquet", ".pq")):
         df = pd.read_parquet(path)
@@ -121,7 +128,7 @@ def main():
         nn = s.notna()
         null_rate = 1 - nn.mean()
         nun = s.nunique(dropna=True)
-        kind = str(s.dtype)
+        kind = "text" if is_text(s) else str(s.dtype)
         notes = []
 
         if nun <= 1:
@@ -136,7 +143,7 @@ def main():
         if pii_name(c):
             add("HIGH", c, "column name suggests PII", "Minimize: drop, hash, or aggregate before analysis; keep out of outputs and prompts")
 
-        if s.dtype == object:
+        if is_text(s):
             sv = s[nn].astype(str)
             stripped = sv.str.strip()
             low = stripped.str.lower()
@@ -176,7 +183,7 @@ def main():
                     kind = "date-as-text"
                     s = pd.to_datetime(stripped, errors="coerce", format="mixed").reindex(df.index)
             # case / whitespace variants
-            if kind == "object" and nun <= 500:
+            if kind == "text" and nun <= 500:
                 ws = int((sv != stripped).sum())
                 grp = pd.DataFrame({"raw": stripped, "norm": low}).drop_duplicates().groupby("norm")["raw"].agg(list)
                 variants = grp[grp.str.len() > 1]
@@ -187,7 +194,7 @@ def main():
                         "Normalize (strip, casefold); also look for synonyms (e.g. US / United States) and map them with a documented mapping")
                 if nun > 50 and nun / nn.sum() < 0.9:
                     notes.append(f"high-cardinality categorical ({nun:,})")
-            if kind == "object" and nun / max(1, nn.sum()) > 0.95:
+            if kind == "text" and nun / max(1, nn.sum()) > 0.95:
                 kind = "id/text"
             if s_num is not None:
                 s = s_num
@@ -208,7 +215,7 @@ def main():
                     add("MED", c, f"{neg:,} negative values in a column that is usually non-negative",
                         "Confirm whether these are refunds or reversals, or errors")
                 notes.append(f"p1/p50/p99 = {v.quantile(.01):.4g}/{v.median():.4g}/{v.quantile(.99):.4g}")
-                if kind == "int64" and nun / n > 0.95:
+                if pd.api.types.is_integer_dtype(s) and nun / n > 0.95:
                     kind = "id?"
 
         # date checks

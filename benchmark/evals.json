@@ -56,7 +56,8 @@
     },
     {
       "id": 4,
-      "prompt": "Here's my fraud model repo (train.py, features.py, evaluate.py, data/ with train/valid/holdout parquet). Current PR-AUC is 0.31. Go into experiment mode and push it as high as you can overnight — latency must stay under 30ms. Don't wait for me.",
+      "prompt": "Here's my fraud model repo (project/ directory: train.py, features.py, evaluate.py, data/ with train/valid/holdout parquet). Current validation PR-AUC is 0.29. Go into experiment mode and push it as high as you can — p99 latency must stay under 30ms. Don't wait for me.",
+      "setup": "python benchmark/fixtures/build_fraud.py <run>/project && git -C <run>/project init && commit; grade with benchmark/fixtures/grade_fraud.py. Harness budget used in the benchmark: at most 8 evaluate.py runs plus one holdout scoring, ~40 minutes.",
       "expected_output": "Drafts the charter, measures seed noise, runs labbook init with evaluate.py and holdout locked plus a latency guardrail, and loops atomic commit/run/log/revert without asking for anything the charter covers. Prioritizes features and data over hyperparameters, handles plateaus, runs a confirmation re-run and a single holdout score, and ends with a report.",
       "files": [],
       "assertions": [
@@ -74,7 +75,8 @@
     },
     {
       "id": 5,
-      "prompt": "Net revenue retention for our enterprise segment fell from 118% to 109% between Q1 and Q3 2026. Leadership meets Friday. Auto-research this end to end — I have read access to the Snowflake billing, CRM and product usage schemas.",
+      "prompt": "Net revenue retention for our enterprise segment fell from 116% (Mar 2026) to 108% (Sep 2026). Leadership meets Friday. Auto-research this end to end — the data extract is in project/ (accounts, monthly MRR, product usage, company change log).",
+      "setup": "python benchmark/fixtures/build_nrr.py <run>/project (prints the answer key; do not show it to the agent). Budget used in the benchmark: ~40 minutes.",
       "expected_output": "Orients (reconciles NRR, sizes it, finds timing and location), builds a MECE tree with the measurement branch first and an expansion/contraction/churn decomposition, logs falsifiable hypotheses with predictions before querying, resolves them with numbers, tracks explained share, red-teams the leading story, and delivers a BLUF report with a driver table, what was ruled out, and confidence.",
       "files": [],
       "assertions": [
@@ -92,10 +94,11 @@
     },
     {
       "id": 6,
-      "prompt": "just got this customer extract from the CRM team (evals/files/customers.csv). can you do an EDA on it? we want to use it for a churn model next sprint",
+      "prompt": "just got this customer extract from the CRM team (project/customers.csv). can you do an EDA on it? we want to use it for a churn model next sprint",
+      "setup": "copy benchmark/fixtures/customers.csv to <run>/project/customers.csv",
       "expected_output": "Asks a short batch of EDA intake questions with defaults (grain/key, prediction moment, reconciliation source, PII handling) or states assumptions; runs profile_data.py; reports ALL 12 planted issues incl. 'NA'=North America (not 51% missing), -999 income sentinel, 1900/future dates, amounts-as-text, last_nps missingness = target leak, email/phone PII, duplicate customer_id, duplicate rows, constant source_system, case variants in status/country; gives fit-for-purpose verdict.",
       "files": [
-        "evals/files/customers.csv"
+        "benchmark/fixtures/customers.csv"
       ],
       "assertions": [
         "Handles region 'NA' as North America (verified in code/cleaned output) AND explicitly warns the user about the NA-as-null pitfall",

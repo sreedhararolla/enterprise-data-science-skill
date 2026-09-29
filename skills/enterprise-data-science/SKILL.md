@@ -1,17 +1,16 @@
 ---
 name: enterprise-data-science
 description: >
-  Senior enterprise data scientist playbook, plus two autonomous modes: Experiment Mode
-  (autoresearch-style loop that edits, runs, and keeps or reverts changes against a locked
-  metric within a budget) and Auto-Research Mode (hypothesis-driven investigation of open
-  questions). Covers framing, data reconciliation, leakage-proof validation, baselines,
-  A/B tests, causal claims, evaluation (CIs, calibration, slices, cost), exec briefs, and
-  governed, monitored models. Use for any data science or ML work with business stakes:
-  building or reviewing models, experiments, "did X cause Y", "why did metric drop",
-  metrics and thresholds, leakage, model cards, drift. Also use when asked to run
-  autonomously, overnight, "keep iterating until it improves", auto-tune or auto-improve a
-  model, or research an approach, even without saying "data science" (e.g. "my AUC is 0.97",
-  "is this lift real").
+  Senior enterprise data scientist playbook for business-stakes analytics and ML: asks
+  focused clarifying questions, reconciles data, profiles data quality (PII, sentinels,
+  target leaks), designs leakage-proof validation with baselines, evaluates beyond one
+  metric (CIs, calibration, thresholds, slices), designs and reads A/B tests, makes
+  causal claims responsibly (DiD, synthetic control), explains metric movements, and
+  prepares models for governed production. Use when building, reviewing or explaining a
+  predictive model or forecast, auditing a dataset before modeling, analyzing or planning
+  an experiment, asking "did X cause Y" or "why did this metric move", choosing metrics or
+  thresholds, writing a model card, or monitoring drift. Not for general coding, BI
+  dashboard styling, or simple data lookups.
 license: MIT
 compatibility: Works in any Agent Skills-compatible agent. Bundled scripts need Python 3.9+ with pandas, numpy and scipy (pyarrow optional for Parquet).
 metadata:
@@ -134,8 +133,8 @@ quick question into a twelve-step program.
 | Review someone's analysis or model | Run the review checklist; lead with the issues that would change the decision | `references/review-checklist.md` |
 | Ship, monitor, or document a model | Model card, monitoring plan, handoff | `references/production-and-governance.md`, `assets/model_card_template.md` |
 | Anything touching people's data or regulated decisions | Governance checks before building | `references/production-and-governance.md` §Governance |
-| "Improve this model as much as you can", "run experiments overnight", "keep iterating", auto-tune | **Experiment Mode** (below) | `references/experiment-mode.md` |
-| Open-ended "why / what drives / where's the opportunity", or "research the best approach to X" | **Auto-Research Mode** (below) | `references/research-mode.md` |
+| "Improve this model as much as you can", "run experiments overnight", "keep iterating", auto-tune | Use the companion **`ds-experiment-mode`** skill if installed; otherwise do Phases 0–4 once and say autonomous iteration needs it | — |
+| Open-ended "why / what drives / where's the opportunity" investigations, "research the best approach to X" | Use the companion **`ds-auto-research`** skill if installed; otherwise use the metric-movement playbook below | — |
 
 ---
 
@@ -277,51 +276,20 @@ red-flag table is clean.
 
 ---
 
-## Autonomous modes
+## Companion skills for autonomous work
 
-Complex problems are rarely solved in one pass. They need dozens of experiments or a
-chain of hypotheses, each shaped by the last result. The two modes below let you work
-through that loop for hours without a human, while staying trustworthy. Both follow the
-same pattern:
+Two related skills from the same repository handle work that needs many iterations
+without a human in the loop:
+- **`ds-experiment-mode`**: a guarded optimization loop for one locked metric. It uses
+  a charter, a locked evaluator and holdout, noise-aware keep/revert in an isolated git
+  worktree, guardrails, budgets, and a single final holdout scoring.
+- **`ds-auto-research`**: a hypothesis-driven investigation of open questions. It uses an
+  issue tree, falsifiable predictions, driver attribution that reconciles to the total,
+  and red-teaming.
 
-1. **Agree on a charter once** (`assets/program_template.md`): objective, metric or
-   question, editable versus locked surface, budget, guardrails, what needs permission,
-   and stop conditions. After that, don't ask about anything it covers. Keep working
-   until a stop condition is hit. Do stop for anything outside it (new data access,
-   spending, production systems, packages, changing the metric).
-2. **Keep state in the lab book** (`scripts/labbook.py`), not in memory. Start every
-   iteration with `labbook.py state`, a summary of about 30 lines. Long runs stay cheap,
-   and the work survives context compaction or a restart.
-3. **Protect the measurement.** Fingerprint the evaluator, the splits, and the holdout.
-   Keep a change only when it beats the noise. Make extra complexity earn a higher bar.
-   Guardrails must pass. The holdout gets scored once, at the end. An autonomous
-   optimizer will exploit any loophole in its measurement, so remove the loopholes
-   before you start.
-4. **Change strategy when stuck.** On a plateau: ablate, redo the error analysis, move
-   to a different layer of the problem, or scout the literature. Stop cleanly when the
-   ceiling is real.
-5. **Finish with a report a human can audit:** what worked, what didn't, the confirmed
-   result, and next steps.
-
-**Experiment Mode** optimizes one metric. It works like Karpathy's *autoresearch* loop:
-propose one atomic change, commit, run the time-boxed harness, then keep the change or
-`git reset` to the best commit. The enterprise additions are noise-aware keep rules,
-guardrails, budgets, a confirmation re-run to correct best-of-N optimism, and a one-time
-holdout. See `references/experiment-mode.md`.
-
-**Auto-Research Mode** answers open questions:
-- pin down the precise fact to explain
-- build a MECE issue tree, with "measurement artifact" as the first branch
-- write falsifiable predictions *before* querying
-- test the cheapest discriminating evidence first
-- track the share of the effect explained so far
-- red-team the leading story, then report the drivers and what was ruled out.
-
-It also covers method and literature research ("what's the best approach to X?"). See
-`references/research-mode.md`.
-
-The modes can chain: research often reveals a metric worth optimizing (then use
-Experiment Mode) or a causal question that needs an A/B test.
+If they aren't installed, don't improvise an unattended loop. Do the work in single,
+reviewable passes using this skill. In every case, the host agent's approval, permission,
+sandbox, and cost rules take precedence over any plan or charter.
 
 ---
 
@@ -447,12 +415,6 @@ for their options. They produce Markdown you can paste into a report.
   - Regression: MAE, RMSE, and bias versus mean or naive baselines, plus per-slice metrics.
 - `scripts/drift_check.py`: population stability index (PSI) and KS tests between a
   reference dataset (training) and a current one (serving or recent data), per feature.
-- `scripts/labbook.py`: persistent state for the autonomous modes. It provides:
-  - `init`, with a charter, locks, and guardrails
-  - `log`, which decides keep or discard automatically and suggests the git action
-  - `idea` (the backlog) and `hyp` (hypotheses with predictions and verdicts)
-  - `state` (a compact summary for each iteration)
-  - `holdout` (single use) and `report`.
 
 ---
 
@@ -479,9 +441,4 @@ Read the one that matches the task; you don't need them all.
   and causality, how to present model results, and chart rules.
 - `references/review-checklist.md`: the pre-delivery QA checklist, also used to review
   others' work.
-- `references/experiment-mode.md`: the autonomous optimization loop, search policy,
-  plateau playbook, integrity rules, confirmation and holdout, and long-running jobs in an agent harness.
-- `references/research-mode.md`: autonomous hypothesis-driven investigation, issue trees,
-  red-teaming, method and literature research, and evidence standards.
-- `assets/analysis_brief_template.md`, `assets/model_card_template.md`,
-  `assets/program_template.md` (the charter for autonomous runs): fill-in templates.
+- `assets/analysis_brief_template.md`, `assets/model_card_template.md`: fill-in templates.

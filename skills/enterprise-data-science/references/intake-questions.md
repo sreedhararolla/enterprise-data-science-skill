@@ -104,7 +104,7 @@ Pick the 3–7 most decision-relevant questions for the task. You don't need all
 - Does it contain personal data, and what handling is approved?
 
 ### Autonomous run (Experiment or Auto-Research Mode)
-Fill the charter (`assets/program_template.md`) through these questions:
+Fill the charter (the `assets/program_template.md` bundled with the `ds-experiment-mode` and `ds-auto-research` skills) through these questions:
 - The objective and the success bar ("good enough to stop" is what?)
 - The metric, the validation scheme, and the holdout (Experiment Mode), or the precise
   question and decision (Research Mode)

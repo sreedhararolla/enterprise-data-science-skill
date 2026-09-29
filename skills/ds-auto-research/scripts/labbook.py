@@ -138,7 +138,9 @@ def lock_warning(b):
     if bad:
         lines = ["", "!!! LOCKED FILES CHANGED — results since the change are NOT comparable !!!"]
         lines += [f"    {p}: {s}" for p, s in bad]
-        lines += ["    Restore them (git checkout -- <file>) before continuing. Never edit the evaluator."]
+        lines += ["    Stop and tell the user. Save a copy of the modified file for review, then restore the",
+                  "    original from version control (e.g. `git show <baseline-commit>:<file> > <file>`).",
+                  "    Never edit the evaluator."]
         return "\n".join(lines)
     return ""
 
@@ -258,11 +260,13 @@ def cmd_log(a):
     if decision in ("keep", "baseline"):
         print(f"  New best {rid} = {fmt(a.metric)}. Keep this commit and build on it.")
     elif best:
-        if best.get("commit"):
-            print(f"  Revert to best ({best['id']}, {fmt(best['metric'])}): `git reset --hard {best['commit']}`")
+        # Recoverable undo only: never suggest reset --hard / clean / checkout -- (they destroy work).
+        if a.commit:
+            print(f"  Undo this candidate, keeping history: `git revert --no-edit {a.commit}` "
+                  f"(best remains {best['id']} = {fmt(best['metric'])}).")
         else:
-            print(f"  Revert to the state of best run {best['id']} ({fmt(best['metric'])}). "
-                  "Tip: pass --commit <sha> when logging so reverts are one git command.")
+            print(f"  Undo this candidate recoverably: commit it first, then `git revert --no-edit HEAD` "
+                  f"(best remains {best['id']} = {fmt(best['metric'])}). Tip: log with --commit <sha>.")
     bs, exhausted = budget_status(b)
     print(f"  Budget: {bs}")
     stall = since_last_keep(b)

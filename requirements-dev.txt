@@ -1,0 +1,5 @@
+-r requirements.txt
+pyarrow>=12
+pytest>=7
+pyyaml>=6
+scikit-learn>=1.2   # used by tests to cross-check average precision, and by the benchmark fixtures
