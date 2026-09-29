@@ -1,0 +1,132 @@
+{
+  "skill_name": "enterprise-data-science",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I built a churn model for our SaaS customers with XGBoost and got 0.97 AUC on a random 80/20 split. Features include tenure, logins_30d, support_tickets, plan, last_invoice_status and account_manager_notes_len. My VP wants to roll it out next week to drive retention offers. Can you help me write up the results for her?",
+      "expected_output": "Does NOT just write the write-up. Flags 0.97 AUC as a leakage red flag, questions last_invoice_status / notes timing, recommends a temporal split with a label-window gap, a baseline, threshold chosen from offer cost/capacity, and only then a BLUF summary with caveats.",
+      "files": [],
+      "assertions": [
+        "Flags the 0.97 AUC as likely leakage and does not produce a rollout-ready write-up",
+        "Names last_invoice_status and account_manager_notes_len as leak suspects and explains the timing mechanism",
+        "States that features must be rebuilt as-of the prediction date (a temporal split alone does not fix overwritten/post-outcome features)",
+        "Recommends a temporal (out-of-time) validation with a gap, not only 'use a time split'",
+        "Includes a baseline comparison (current rule and/or simple model) in the proposed validation, and the provided script actually implements it",
+        "Recommends a randomized no-offer holdout/pilot to measure whether retention offers actually work",
+        "Ties the model to the decision: threshold from contact capacity or offer cost vs saved-customer value",
+        "Any validation script provided runs and detects a planted post-outcome leak (grader verifies on synthetic data)",
+        "The reply to the user fits roughly one page with depth in attachments, and references no files/scripts that are not included",
+        "Numbers and recommendations are consistent across the reply and any memo"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "we ran a checkout test for 9 days. control 48,210 users 2,031 orders, treatment 50,944 users 2,260 orders. PM says treatment won by 5% and wants to ship. is that right?",
+      "expected_output": "Runs SRM first (this split fails SRM, p << 0.001), says results can't be trusted until assignment is debugged; notes 9 days isn't full two weekly cycles; shows what the lift/CI would be but frames it as not decision-grade.",
+      "files": [],
+      "assertions": [
+        "Detects sample ratio mismatch (p << 0.001) and says results are not trustworthy until assignment/logging is fixed",
+        "Conversion rates and relative lift computed correctly (~4.21% vs ~4.44%, ~+5.3%)",
+        "Reports uncertainty (CI and/or p ~0.08) and notes the lift is not statistically detectable even ignoring SRM",
+        "Quantifies or reasons concretely about how the SRM could bias the lift (direction/size depends on who the missing/extra users are)",
+        "Raises test-duration issues (9 days < two weekly cycles) and/or peeking / pre-registration",
+        "Mentions guardrail metrics (e.g., revenue per user, AOV, errors) before shipping",
+        "Gives concrete next steps including debugging assignment and an A/A test or verified rerun with a pre-set sample size",
+        "Recommendations and numbers are internally consistent (e.g., rerun duration stated the same everywhere)",
+        "Concise: the core answer is readable in under a page"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Our marketing team launched a loyalty program in Texas and Florida in March 2026 but not other states. They want to know how much incremental revenue per customer it caused. I have monthly revenue by state from 2024 through August 2026 in Snowflake. How should I approach this?",
+      "expected_output": "Recommends DiD or synthetic control, states the parallel-trends assumption, pre-trend/event-study and placebo checks, clustered SEs by state, few-treated-units caveat, language ladder for the claim, and a reconciliation step against finance revenue.",
+      "files": [],
+      "assertions": [
+        "Recommends DiD and/or synthetic control with a clear primary estimator",
+        "Handles differential seasonality between TX/FL and controls (e.g., YoY differencing, state-by-month effects) and explains why",
+        "Addresses inference with only 2 treated units (permutation/placebo inference; not relying on clustered SEs)",
+        "Proposes pre-trend/event-study and placebo date/state falsification checks",
+        "Defines a 'per customer' denominator that the program itself cannot change (e.g., fixed pre-launch customer base) and discusses composition effects",
+        "Distinguishes effect per customer in state vs per enrolled member",
+        "Includes a false-positive check (no-effect simulation) or power discussion given 2 treated states",
+        "Recommends pre-registering the analysis plan and/or reconciling revenue to finance",
+        "Any provided script runs and its claimed simulation results reproduce (grader verifies)",
+        "Causal language hedged appropriately; reply concise with depth in attachments"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Here's my fraud model repo (train.py, features.py, evaluate.py, data/ with train/valid/holdout parquet). Current PR-AUC is 0.31. Go into experiment mode and push it as high as you can overnight — latency must stay under 30ms. Don't wait for me.",
+      "expected_output": "Drafts the charter, measures seed noise, runs labbook init with evaluate.py and holdout locked plus a latency guardrail, and loops atomic commit/run/log/revert without asking for anything the charter covers. Prioritizes features and data over hyperparameters, handles plateaus, runs a confirmation re-run and a single holdout score, and ends with a report.",
+      "files": [],
+      "assertions": [
+        "Writes an explicit plan/charter before iterating (metric, budget, guardrail, locked files)",
+        "evaluate.py unchanged (checks.json)",
+        "chargeback_filed not used as a feature (checks.json) and explicitly identified as a post-outcome leak",
+        "True holdout-grade quality: re-run validation PR-AUC (checks.json true_pr_auc) >= 0.46",
+        "True p99 latency < 30ms (checks.json)",
+        "Validation labels are not used for selection outside the counted evaluate.py runs (extra tuning uses training-only splits)",
+        "Final choice confirmed with fresh seeds or a CI rather than a single best-of-N number",
+        "Latency solution uses public APIs or verifies score equivalence (no silent fallback to a slow/private path)",
+        "Holdout scored exactly once at the end and reported, ideally with CI/calibration/slice checks",
+        "Every kept change is committed and reverted changes are not left in the final code; final report lists what worked, what didn't, and the ceiling"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Net revenue retention for our enterprise segment fell from 118% to 109% between Q1 and Q3 2026. Leadership meets Friday. Auto-research this end to end — I have read access to the Snowflake billing, CRM and product usage schemas.",
+      "expected_output": "Orients (reconciles NRR, sizes it, finds timing and location), builds a MECE tree with the measurement branch first and an expansion/contraction/churn decomposition, logs falsifiable hypotheses with predictions before querying, resolves them with numbers, tracks explained share, red-teams the leading story, and delivers a BLUF report with a driver table, what was ruled out, and confidence.",
+      "files": [],
+      "assertions": [
+        "Recomputes NRR (~116.0% -> ~108.3%) from the data",
+        "Identifies all three drivers: legacy Pro repricing at renewal, Acme post-migration churn, and the July FX conversion change (as a measurement artifact)",
+        "Driver bridge is attribution-by-driver (counterfactual/Shapley or equivalent), not merely by segment, and reconciles to the full ~7.7pp with a residual",
+        "Driver sizes are within ~1pp of the key (Pro ~2.5pp, Acme ~2.6pp, FX ~0.9pp)",
+        "Provides statistical support: tests, CIs, or placebo comparisons for at least two drivers",
+        "Flags the x0.75 Pro pattern for a billing/pricing verification (not silently assumed to be customer downgrades)",
+        "Rules out red herrings (APAC reorg/usage, mobile redesign, add-on) with evidence",
+        "No unsupported factual claims: grader spot-checks at least 3 quoted numbers against the data",
+        "Headline and body use hedged, evidence-matched causal language",
+        "Exec-ready: bottom line first, about a page, with depth in attachments"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "just got this customer extract from the CRM team (evals/files/customers.csv). can you do an EDA on it? we want to use it for a churn model next sprint",
+      "expected_output": "Asks a short batch of EDA intake questions with defaults (grain/key, prediction moment, reconciliation source, PII handling) or states assumptions; runs profile_data.py; reports ALL 12 planted issues incl. 'NA'=North America (not 51% missing), -999 income sentinel, 1900/future dates, amounts-as-text, last_nps missingness = target leak, email/phone PII, duplicate customer_id, duplicate rows, constant source_system, case variants in status/country; gives fit-for-purpose verdict.",
+      "files": [
+        "evals/files/customers.csv"
+      ],
+      "assertions": [
+        "Handles region 'NA' as North America (verified in code/cleaned output) AND explicitly warns the user about the NA-as-null pitfall",
+        "Flags income -999 sentinel, 1900-01-01 and 2031 dates, and amount-as-text",
+        "Flags last_nps missingness as a perfect target leak and measures signal with it removed",
+        "Flags PII (email, phone) and the cleaned output contains no direct or pseudonymous identifiers (e.g., hashed email) unless justified",
+        "Flags duplicate customer_id and exact duplicate rows",
+        "Flags constant source_system and case/whitespace variants",
+        "Notices the status vs churned label conflict and asks which is the target",
+        "Asks for a trusted number to reconcile the extract to",
+        "Quoted numbers are accurate (grader spot-checks at least 5 against the data)",
+        "Gives a clear fit-for-purpose verdict; reply concise with depth in attachments"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Build me a model to predict which customers will churn. Data is in our warehouse, table analytics.customer_monthly.",
+      "expected_output": "Does NOT start modeling immediately. Asks one batch of 3-6 high-leverage questions (prediction moment, churn definition/window, action + capacity, error costs, baseline/current rule, reconciliation source), each with a recommended default and why it matters; notes what it could discover itself; offers to proceed on defaults.",
+      "files": [],
+      "assertions": [
+        "Does not charge ahead: asks a focused batch of clarifying questions",
+        "Asks explicitly when the prediction is made and the prediction horizon",
+        "Asks the churn definition",
+        "Asks what action follows and team capacity and/or error costs, and says how that sets the threshold",
+        "Every question has a default attached",
+        "Counts <= 8 individual asks (count sub-questions)",
+        "Prepared pipeline includes a non-model baseline (e.g., current rule or simple heuristic)",
+        "Prepared pipeline keeps model selection separate from the final holdout",
+        "Prepared pipeline handles recent months whose outcome is not yet known (label censoring)",
+        "Offers to inspect the schema itself rather than asking discoverable questions; references no scripts that aren't provided"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,191 @@
+[
+ {
+  "eval": "eval-1-leaky-churn-writeup",
+  "config": "competitor",
+  "passed": 7,
+  "total": 7,
+  "holistic": 8,
+  "tokens": 71366,
+  "seconds": 101.6
+ },
+ {
+  "eval": "eval-1-leaky-churn-writeup",
+  "config": "with_skill",
+  "passed": 7,
+  "total": 7,
+  "holistic": 9,
+  "tokens": 95388,
+  "seconds": 202.2
+ },
+ {
+  "eval": "eval-1-leaky-churn-writeup",
+  "config": "without_skill",
+  "passed": 6,
+  "total": 7,
+  "holistic": 7,
+  "tokens": 71783,
+  "seconds": 145.9
+ },
+ {
+  "eval": "eval-2-srm-checkout-test",
+  "config": "competitor",
+  "passed": 5,
+  "total": 6,
+  "holistic": 7,
+  "tokens": 67071,
+  "seconds": 57.2
+ },
+ {
+  "eval": "eval-2-srm-checkout-test",
+  "config": "with_skill",
+  "passed": 6,
+  "total": 6,
+  "holistic": 9,
+  "tokens": 82559,
+  "seconds": 101.4
+ },
+ {
+  "eval": "eval-2-srm-checkout-test",
+  "config": "without_skill",
+  "passed": 6,
+  "total": 6,
+  "holistic": 8,
+  "tokens": 60784,
+  "seconds": 50.7
+ },
+ {
+  "eval": "eval-3-loyalty-did",
+  "config": "competitor",
+  "passed": 7,
+  "total": 7,
+  "holistic": 7,
+  "tokens": 79432,
+  "seconds": 172.7
+ },
+ {
+  "eval": "eval-3-loyalty-did",
+  "config": "with_skill",
+  "passed": 7,
+  "total": 7,
+  "holistic": 9,
+  "tokens": 108882,
+  "seconds": 296.9
+ },
+ {
+  "eval": "eval-3-loyalty-did",
+  "config": "without_skill",
+  "passed": 7,
+  "total": 7,
+  "holistic": 8,
+  "tokens": 78334,
+  "seconds": 194.2
+ },
+ {
+  "eval": "eval-4-fraud-experiment-mode",
+  "config": "competitor",
+  "passed": 9,
+  "total": 10,
+  "holistic": 6,
+  "tokens": 88081,
+  "seconds": 284.0
+ },
+ {
+  "eval": "eval-4-fraud-experiment-mode",
+  "config": "with_skill",
+  "passed": 10,
+  "total": 10,
+  "holistic": 9,
+  "tokens": 123368,
+  "seconds": 631.2
+ },
+ {
+  "eval": "eval-4-fraud-experiment-mode",
+  "config": "without_skill",
+  "passed": 9,
+  "total": 10,
+  "holistic": 7,
+  "tokens": 79774,
+  "seconds": 503.6
+ },
+ {
+  "eval": "eval-5-nrr-auto-research",
+  "config": "competitor",
+  "passed": 7,
+  "total": 8,
+  "holistic": 7,
+  "tokens": 97162,
+  "seconds": 256.3
+ },
+ {
+  "eval": "eval-5-nrr-auto-research",
+  "config": "with_skill",
+  "passed": 8,
+  "total": 8,
+  "holistic": 8,
+  "tokens": 125168,
+  "seconds": 371.8
+ },
+ {
+  "eval": "eval-5-nrr-auto-research",
+  "config": "without_skill",
+  "passed": 7,
+  "total": 8,
+  "holistic": 6,
+  "tokens": 85363,
+  "seconds": 218.7
+ },
+ {
+  "eval": "eval-6-messy-crm-eda",
+  "config": "competitor",
+  "passed": 13,
+  "total": 13,
+  "holistic": 8,
+  "tokens": 88993,
+  "seconds": 153.0
+ },
+ {
+  "eval": "eval-6-messy-crm-eda",
+  "config": "with_skill",
+  "passed": 13,
+  "total": 13,
+  "holistic": 9,
+  "tokens": 95816,
+  "seconds": 174.3
+ },
+ {
+  "eval": "eval-6-messy-crm-eda",
+  "config": "without_skill",
+  "passed": 13,
+  "total": 13,
+  "holistic": 7,
+  "tokens": 80884,
+  "seconds": 182.3
+ },
+ {
+  "eval": "eval-7-vague-churn-request",
+  "config": "competitor",
+  "passed": 8,
+  "total": 8,
+  "holistic": 7,
+  "tokens": 80617,
+  "seconds": 207.2
+ },
+ {
+  "eval": "eval-7-vague-churn-request",
+  "config": "with_skill",
+  "passed": 8,
+  "total": 8,
+  "holistic": 9,
+  "tokens": 109122,
+  "seconds": 317.5
+ },
+ {
+  "eval": "eval-7-vague-churn-request",
+  "config": "without_skill",
+  "passed": 8,
+  "total": 8,
+  "holistic": 6,
+  "tokens": 71907,
+  "seconds": 167.7
+ }
+]

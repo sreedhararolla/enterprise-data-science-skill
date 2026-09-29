@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+labbook.json
+results.tsv
+.DS_Store
