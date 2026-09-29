@@ -10,13 +10,14 @@ description: >
   you can", "run experiments overnight", "keep iterating until it stops improving",
   "auto-tune this model". Not for one-off modeling questions or open-ended "why" questions.
 license: MIT
-compatibility: Works in any Agent Skills-compatible agent with shell access and git. Bundled scripts need Python 3.9+ with pandas, numpy and scipy.
 metadata:
   author: Sreedhar Reddy Arolla
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Experiment Mode: guarded autonomous optimization
+
+**Requirements:** Needs shell access and git. Bundled scripts need Python 3.9+ with pandas, numpy and scipy; they make no network calls. Works in any Agent Skills-compatible agent.
 
 Experiment Mode runs many propose → run → measure → keep/revert cycles without a human in
 the loop, like Karpathy's *autoresearch*, but with the protections an enterprise needs:

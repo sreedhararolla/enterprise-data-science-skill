@@ -1,23 +1,25 @@
 ---
 name: ds-auto-research
 description: >
-  Autonomous, hypothesis-driven investigation of an open business or data question, end
-  to end: pin down the exact fact to explain, build a MECE issue tree (measurement
-  artifacts first), write falsifiable predictions before querying, test the cheapest
-  discriminating evidence, attribute the change by driver with a bridge that reconciles to
-  the total, red-team the leading story, and deliver a conclusion-first report with
-  confidence levels and what was ruled out. Use when asked to investigate or "auto-research"
-  questions like "why did NRR / churn / revenue drop?", "what drives expansion?", "where
-  are we losing margin?", or "research the best approach to X". Not for quick metric
-  lookups or for optimizing a model metric.
+  Autonomous, end-to-end root-cause investigation of a significant business metric change
+  or open business question, run as a multi-step project: reconcile and size the change,
+  build a MECE issue tree (measurement artifacts first), write falsifiable predictions
+  before querying, attribute the change by driver with a bridge that reconciles to the
+  total, red-team the leading story, and deliver a conclusion-first report with
+  confidence levels and what was ruled out. Use only when the user asks for a full or
+  autonomous investigation, e.g. "auto-research why NRR fell", "investigate end to end
+  what drove the churn increase before Friday's leadership meeting". Not for a quick
+  first-pass read on a metric change or a single causal question (use
+  enterprise-data-science), and not for tuning a model (use ds-experiment-mode).
 license: MIT
-compatibility: Works in any Agent Skills-compatible agent. Needs read access to the data (files or a warehouse). Bundled lab-book script needs Python 3.9+.
 metadata:
   author: Sreedhar Reddy Arolla
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Auto-Research: autonomous, hypothesis-driven investigation
+
+**Requirements:** Needs read access to the data (files or a warehouse). The bundled lab-book script needs Python 3.9+ and makes no network calls. Works in any Agent Skills-compatible agent.
 
 Auto-Research answers open-ended questions end to end, with minimal human input. It works
 like a disciplined analyst:

@@ -28,7 +28,8 @@ def test_frontmatter_spec(skill):
     assert fm["name"] == skill.name
     assert re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", fm["name"]) and len(fm["name"]) <= 64
     assert 1 <= len(fm["description"]) <= 1024
-    assert len(fm.get("compatibility", "")) <= 500
+    assert "compatibility" not in fm, "keep requirements in the body; some validators reject this optional field"
+    assert "**Requirements:**" in text
     assert fm.get("license") == "MIT"
     assert text.count("\n") < 500, "keep SKILL.md under 500 lines"
 

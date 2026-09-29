@@ -1,24 +1,26 @@
 ---
 name: enterprise-data-science
 description: >
-  Senior enterprise data scientist playbook for business-stakes analytics and ML: asks
-  focused clarifying questions, reconciles data, profiles data quality (PII, sentinels,
-  target leaks), designs leakage-proof validation with baselines, evaluates beyond one
-  metric (CIs, calibration, thresholds, slices), designs and reads A/B tests, makes
-  causal claims responsibly (DiD, synthetic control), explains metric movements, and
-  prepares models for governed production. Use when building, reviewing or explaining a
-  predictive model or forecast, auditing a dataset before modeling, analyzing or planning
-  an experiment, asking "did X cause Y" or "why did this metric move", choosing metrics or
-  thresholds, writing a model card, or monitoring drift. Not for general coding, BI
-  dashboard styling, or simple data lookups.
+  Senior enterprise data scientist playbook for single-pass, business-stakes analytics and
+  ML work: asks focused clarifying questions, reconciles data, profiles data quality (PII,
+  sentinels, target leaks), designs leakage-proof validation with baselines, evaluates
+  beyond one metric (CIs, calibration, thresholds, slices), designs and reads A/B tests,
+  makes causal claims responsibly (DiD, synthetic control), and prepares models for
+  governed production. Use when building, reviewing or explaining a predictive model or
+  forecast, auditing a dataset before modeling, planning or analyzing an experiment,
+  asking "did X cause Y", giving a quick first-pass read on a metric change, choosing
+  metrics or thresholds, writing a model card, or monitoring drift. Not for unattended
+  multi-step root-cause investigations (use ds-auto-research), autonomous model-tuning
+  loops (use ds-experiment-mode), general coding, or simple lookups.
 license: MIT
-compatibility: Works in any Agent Skills-compatible agent. Bundled scripts need Python 3.9+ with pandas, numpy and scipy (pyarrow optional for Parquet).
 metadata:
   author: Sreedhar Reddy Arolla
-  version: "1.0.0"
+  version: "1.2.0"
 ---
 
 # Enterprise Data Science
+
+**Requirements:** Bundled scripts need Python 3.9+ with pandas, numpy and scipy (pyarrow optional for Parquet); they make no network calls. Works in any Agent Skills-compatible agent.
 
 In an enterprise, a data scientist is paid for **better decisions**, not for models.
 The model, the notebook and the p-value are only means to that end. What makes
@@ -134,7 +136,8 @@ quick question into a twelve-step program.
 | Ship, monitor, or document a model | Model card, monitoring plan, handoff | `references/production-and-governance.md`, `assets/model_card_template.md` |
 | Anything touching people's data or regulated decisions | Governance checks before building | `references/production-and-governance.md` §Governance |
 | "Improve this model as much as you can", "run experiments overnight", "keep iterating", auto-tune | Use the companion **`ds-experiment-mode`** skill if installed; otherwise do Phases 0–4 once and say autonomous iteration needs it | — |
-| Open-ended "why / what drives / where's the opportunity" investigations, "research the best approach to X" | Use the companion **`ds-auto-research`** skill if installed; otherwise use the metric-movement playbook below | — |
+| Explicit request for a full, end-to-end or autonomous root-cause investigation ("auto-research why NRR fell", "investigate end to end before Friday") | Use the companion **`ds-auto-research`** skill if installed; otherwise use the metric-movement playbook below, in reviewable passes | — |
+| "What's the best method for X?" | Compare 2–3 candidate approaches against the constraints (data size, latency, interpretability), cite sources, and recommend one | `references/evaluation.md` |
 
 ---
 

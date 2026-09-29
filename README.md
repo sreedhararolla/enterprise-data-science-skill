@@ -18,7 +18,7 @@ can still use them; see [below](#other-agents-and-plain-llm-apps).
 |---|---|---|
 | [`enterprise-data-science`](skills/enterprise-data-science/SKILL.md) | Core playbook: intake questions, EDA and data-quality audits, leakage-proof validation, evaluation, A/B tests, causal inference, metric movements, production and governance | "build a churn model", "is this lift real?", "do an EDA on this extract", "did the program cause the increase?" |
 | [`ds-experiment-mode`](skills/ds-experiment-mode/SKILL.md) | A guarded autonomous optimization loop for one metric: locked evaluator and holdout, noise-aware keep/revert in an isolated git worktree, guardrails, budgets | "push PR-AUC as high as you can overnight", "keep iterating until it stops improving" |
-| [`ds-auto-research`](skills/ds-auto-research/SKILL.md) | An autonomous, hypothesis-driven investigation: issue tree, falsifiable predictions, driver attribution that reconciles to the total, red-teaming | "why did NRR drop? research it end to end", "what's driving churn?" |
+| [`ds-auto-research`](skills/ds-auto-research/SKILL.md) | An autonomous, hypothesis-driven investigation: issue tree, falsifiable predictions, driver attribution that reconciles to the total, red-teaming | "auto-research why NRR fell", "investigate end to end what drove the churn increase" |
 
 **Evidence.** In a blind benchmark (7 tasks, 2 runs per setup, 42 outputs), an **earlier
 v3 snapshot** of the core skill had the best mean score on all 7 tasks. It was compared
@@ -90,8 +90,10 @@ instructions when a request matches, or when you invoke a skill by name.
   or force-push. The tests enforce this.
 - **The autonomous loop can't game its metric.** The evaluator, splits and holdout are
   fingerprinted, and the holdout can be scored only once.
-- **No data leaves your environment.** The scripts run locally with no network access.
-  The skills tell the agent to minimize PII and keep it out of outputs and prompts.
+- **Data handling:** the bundled scripts make no network calls. How the agent itself
+  handles your data depends on its runtime and deployment, so review its privacy and
+  retention settings before sharing sensitive data. The skills also tell the agent to
+  minimize PII and keep it out of outputs and prompts.
 - **Processes:** the agent is told never to kill processes it didn't start.
 
 ## Bundled scripts
@@ -134,8 +136,9 @@ The test suite (53 tests) checks that:
 
 CI runs on Python 3.9–3.13 with pandas 2.x and 3.x, on Linux, Windows and macOS.
 
-`benchmark/` has the task prompts, seeded fixture generators, a grading harness and
-answer keys, so you can reproduce the evaluation. See [benchmark/README.md](benchmark/README.md).
+`benchmark/` contains benchmark fixtures, task definitions, grading materials, and the
+published results. You supply your own agent harness to run the tasks, and most of the
+grading is manual or done by a grading agent. See [benchmark/README.md](benchmark/README.md).
 
 ## Contributing
 
